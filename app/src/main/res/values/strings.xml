@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">NumFacts</string>
+    <string name="back_button">Back</string>
+    <string name="delete_item_button">Delete item</string>
+    <string name="item_deleted_message">Item deleted.</string>
+    <string name="undo_button">Undo</string>
 </resources>
