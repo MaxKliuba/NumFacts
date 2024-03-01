@@ -9,7 +9,7 @@ import com.tech.maxclub.numfacts.feature.numfacts.data.local.entities.NumFactEnt
 @Database(
     entities = [NumFactEntity::class],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 abstract class NumFactsDatabase : RoomDatabase() {
     abstract val numFactsDao: NumFactsDao
