@@ -1,17 +1,32 @@
 package com.tech.maxclub.numfacts.feature.numfacts.presentation.numfactslist
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tech.maxclub.numfacts.feature.numfacts.presentation.numfactslist.components.GetNumFactSection
 import com.tech.maxclub.numfacts.feature.numfacts.presentation.numfactslist.components.NumFactsList
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun NumFactsScreen(
@@ -21,31 +36,102 @@ fun NumFactsScreen(
     val state by viewModel.uiState
     val listState = rememberLazyListState()
 
-    LaunchedEffect(key1 = state.numFactPreview) {
-        if (state.numFactPreview != null) {
-            listState.scrollToItem(0)
+    val configuration = LocalConfiguration.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(key1 = state.numFacts.size) {
+        listState.scrollToItem(0)
+    }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.uiAction.collectLatest { action ->
+            when (action) {
+                is NumFactsUiAction.ShowErrorMessage -> {
+                    snackbarHostState.showSnackbar(
+                        message = action.errorMessage,
+                        withDismissAction = true,
+                        duration = SnackbarDuration.Short,
+                    )
+                }
+            }
         }
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Button(onClick = viewModel::fetchNumFact) {
-            Text(text = "Get fact")
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionColor = MaterialTheme.colorScheme.primary,
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    snackbarData = data,
+                )
+            }
         }
+    ) { paddingValues ->
+        when (configuration.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    GetNumFactSection(
+                        numTypeValue = state.numTypeValue,
+                        onChangeNumTypeValue = viewModel::changeNumTypeValue,
+                        numberValue = state.numberValue,
+                        onChangeNumberValue = viewModel::tryChangeNumberValue,
+                        onGetNumFact = viewModel::fetchNumFact,
+                        randomNumTypeValue = state.randomNumTypeValue,
+                        onChangeRandomNumTypeValue = viewModel::changeRandomNumTypeValue,
+                        onGetRandomNumFact = viewModel::fetchRandomNumFact,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                    )
 
-        Button(onClick = viewModel::fetchRandomNumFact) {
-            Text(text = "Get fact about random number")
+                    NumFactsList(
+                        isLoading = state.isListLoading,
+                        numFacts = state.numFacts,
+                        onClick = onNavigateToNumFactDetail,
+                        listState = listState,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                    )
+                }
+            }
+
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    GetNumFactSection(
+                        numTypeValue = state.numTypeValue,
+                        onChangeNumTypeValue = viewModel::changeNumTypeValue,
+                        numberValue = state.numberValue,
+                        onChangeNumberValue = viewModel::tryChangeNumberValue,
+                        onGetNumFact = viewModel::fetchNumFact,
+                        randomNumTypeValue = state.randomNumTypeValue,
+                        onChangeRandomNumTypeValue = viewModel::changeRandomNumTypeValue,
+                        onGetRandomNumFact = viewModel::fetchRandomNumFact,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    NumFactsList(
+                        isLoading = state.isListLoading,
+                        numFacts = state.numFacts,
+                        onClick = onNavigateToNumFactDetail,
+                        listState = listState,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
-
-        NumFactsList(
-            isLoading = state.isListLoading,
-            numFactPreview = state.numFactPreview,
-            numFacts = state.numFacts,
-            onClick = onNavigateToNumFactDetail,
-            listState = listState,
-            modifier = Modifier.weight(1f)
-        )
     }
 }

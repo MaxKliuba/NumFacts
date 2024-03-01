@@ -1,8 +1,8 @@
 package com.tech.maxclub.numfacts.feature.numfacts.domain.models
 
-enum class NumType(val value: String) {
-    TRIVIA("trivia"),
-    MATH("math"),
-    DATE("date"),
-    YEAR("year"),
+enum class NumType(val label: String) {
+    TRIVIA("TRIVIA"),
+    MATH(" MATH "),
+    DATE(" DATE "),
+    YEAR(" YEAR "),
 }

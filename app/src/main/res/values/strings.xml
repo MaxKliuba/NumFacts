@@ -4,4 +4,10 @@
     <string name="delete_item_button">Delete item</string>
     <string name="item_deleted_message">Item deleted.</string>
     <string name="undo_button">Undo</string>
+    <string name="get_fact_title">Get Fact</string>
+    <string name="number_placeholder">Number</string>
+    <string name="get_fact_button">Get fact</string>
+    <string name="or_label">or</string>
+    <string name="get_random_fact_button">Get fact about random number</string>
+    <string name="recent_facts_title">Recent</string>
 </resources>

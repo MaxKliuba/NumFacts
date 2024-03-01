@@ -5,16 +5,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tech.maxclub.numfacts.core.update
-import com.tech.maxclub.numfacts.feature.numfacts.domain.models.NumFactPreview
 import com.tech.maxclub.numfacts.feature.numfacts.domain.models.NumType
 import com.tech.maxclub.numfacts.feature.numfacts.domain.repositories.NumFactsRepository
 import com.tech.maxclub.numfacts.feature.numfacts.domain.usecases.GetNumFacts
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,58 +27,66 @@ class NumFactsViewModel @Inject constructor(
 
     private val _uiState = mutableStateOf(
         NumFactsUiState(
-            numType = NumType.TRIVIA,
-            number = "0",
-            randomNumType = NumType.MATH,
+            numTypeValue = NumType.TRIVIA,
+            numberValue = "",
+            randomNumTypeValue = NumType.MATH,
             isListLoading = false,
-            numFactPreview = null,
             numFacts = emptyList(),
         )
     )
     val uiState: State<NumFactsUiState> = _uiState
 
-    private var fetchNumFactJob: Job? = null
+    private val uiActionChannel = Channel<NumFactsUiAction>()
+    val uiAction = uiActionChannel.receiveAsFlow()
 
+    private var fetchNumFactJob: Job? = null
 
     init {
         permanentlyDeleteMarkedNumFacts()
         fetchNumFacts()
     }
 
-    fun fetchNumFact() {
-        fetchNumFact(_uiState.value.numType, _uiState.value.number)
+    fun changeNumTypeValue(numType: NumType) {
+        _uiState.update { it.copy(numTypeValue = numType) }
     }
 
-    fun fetchRandomNumFact() {
-        fetchNumFact(_uiState.value.randomNumType)
+    fun tryChangeNumberValue(number: String) =
+        if (number.length <= 50) {
+            _uiState.update { it.copy(numberValue = number) }
+
+            true
+        } else false
+
+    fun changeRandomNumTypeValue(numType: NumType) {
+        _uiState.update { it.copy(randomNumTypeValue = numType) }
     }
 
-    private fun fetchNumFact(type: NumType, number: String? = null) {
+    fun fetchNumFact(number: String, type: NumType) {
+        fetchNumFactByTypeAndNumber(type, number)
+    }
+
+    fun fetchRandomNumFact(type: NumType) {
+        fetchNumFactByTypeAndNumber(type)
+    }
+
+    private fun fetchNumFactByTypeAndNumber(type: NumType, number: String? = null) {
         val getNumFactFun = number?.let { numFactsRepository.getNumFact(number, type) }
             ?: numFactsRepository.getRandomNumFact(type)
 
         fetchNumFactJob?.cancel()
         fetchNumFactJob = getNumFactFun
             .onStart {
-                val numFactPreview = NumFactPreview(
-                    type = type,
-                    number = number ?: "Random"
-                )
-                _uiState.update {
-                    it.copy(numFactPreview = numFactPreview)
-                }
+                _uiState.update { it.copy(isListLoading = true) }
             }
             .onEach {
-                _uiState.update {
-                    it.copy(numFactPreview = null)
-                }
+                _uiState.update { it.copy(isListLoading = false) }
             }
             .catch { e ->
                 e.printStackTrace()
 
-                _uiState.update {
-                    it.copy(numFactPreview = null)
-                }
+                _uiState.update { it.copy(isListLoading = false) }
+
+                uiActionChannel.send(NumFactsUiAction.ShowErrorMessage(e.message.toString()))
             }
             .launchIn(viewModelScope)
     }
@@ -91,9 +100,7 @@ class NumFactsViewModel @Inject constructor(
     private fun fetchNumFacts() {
         getNumFactsUseCase()
             .onStart {
-                _uiState.update {
-                    it.copy(isListLoading = true)
-                }
+                _uiState.update { it.copy(isListLoading = true) }
             }
             .onEach { numFacts ->
                 _uiState.update {
@@ -105,6 +112,8 @@ class NumFactsViewModel @Inject constructor(
             }
             .catch { e ->
                 e.printStackTrace()
+
+                _uiState.update { it.copy(isListLoading = false) }
             }
             .launchIn(viewModelScope)
     }

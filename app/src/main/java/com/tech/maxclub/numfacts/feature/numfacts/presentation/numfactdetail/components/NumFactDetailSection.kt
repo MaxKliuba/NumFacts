@@ -25,7 +25,7 @@ fun NumFactDetailSection(
         Text(
             text = numFact.number,
             style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = 52.sp,
+                fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
             ),
             modifier = Modifier
@@ -37,7 +37,7 @@ fun NumFactDetailSection(
             selected = false,
             onClick = {},
             label = {
-                Text(text = numFact.type.name)
+                Text(text = numFact.type.label)
             },
             modifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -48,7 +48,7 @@ fun NumFactDetailSection(
             text = numFact.fact,
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
             textAlign = TextAlign.Justify,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
 }

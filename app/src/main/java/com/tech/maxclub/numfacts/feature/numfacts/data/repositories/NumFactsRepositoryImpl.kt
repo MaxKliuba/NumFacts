@@ -10,6 +10,7 @@ import com.tech.maxclub.numfacts.feature.numfacts.domain.repositories.NumFactsRe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import retrofit2.HttpException
 import java.util.Date
 import javax.inject.Inject
 
@@ -19,32 +20,43 @@ class NumFactsRepositoryImpl @Inject constructor(
 ) : NumFactsRepository {
 
     override fun getNumFact(number: String, type: NumType): Flow<NumFact> = flow {
-        val fact = numbersApi.getNumFact(number, type.value)
+        val response = numbersApi.getNumFact(number, type.name.lowercase())
+        val body = response.body()
 
-        val numFactEntity = NumFactEntity(
-            type = type,
-            number = number,
-            fact = fact,
-            timestamp = Date().time
-        )
-        numFactsDao.insertNumFacts(numFactEntity)
+        if (response.isSuccessful && body != null) {
+            val numFactEntity = NumFactEntity(
+                type = type,
+                number = number,
+                fact = body,
+                timestamp = Date().time
+            )
+            numFactsDao.insertNumFacts(numFactEntity)
 
-        emit(numFactEntity.toNumFact())
+            emit(numFactEntity.toNumFact())
+        } else {
+            throw HttpException(response)
+        }
     }
 
     override fun getRandomNumFact(type: NumType): Flow<NumFact> = flow {
-        val fact = numbersApi.getRandomNumFact(type.value)
-        val number = fact.substringBefore("is", missingDelimiterValue = "Random").trim()
+        val response = numbersApi.getRandomNumFact(type.name.lowercase())
+        val body = response.body()
 
-        val numFactEntity = NumFactEntity(
-            type = type,
-            number = number,
-            fact = fact,
-            timestamp = Date().time
-        )
-        numFactsDao.insertNumFacts(numFactEntity)
+        if (response.isSuccessful && body != null) {
+            val number = body.substringBefore("is", missingDelimiterValue = "Random").trim()
 
-        emit(numFactEntity.toNumFact())
+            val numFactEntity = NumFactEntity(
+                type = type,
+                number = number,
+                fact = body,
+                timestamp = Date().time
+            )
+            numFactsDao.insertNumFacts(numFactEntity)
+
+            emit(numFactEntity.toNumFact())
+        } else {
+            throw HttpException(response)
+        }
     }
 
     override fun getNumFacts(): Flow<List<NumFact>> =
