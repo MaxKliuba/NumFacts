@@ -3,11 +3,9 @@ package com.tech.maxclub.numfacts.feature.numfacts.presentation.numfactslist
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -22,15 +20,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tech.maxclub.numfacts.feature.numfacts.presentation.numfactslist.components.GetNumFactSection
 import com.tech.maxclub.numfacts.feature.numfacts.presentation.numfactslist.components.NumFactsList
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun NumFactsScreen(
     onNavigateToNumFactDetail: (Int) -> Unit,
+    onDeleteNumFact: (Int) -> Unit,
     viewModel: NumFactsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState
@@ -39,7 +38,8 @@ fun NumFactsScreen(
     val configuration = LocalConfiguration.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(key1 = state.numFacts.size) {
+    LaunchedEffect(key1 = state.isListLoading) {
+        delay(100)
         listState.scrollToItem(0)
     }
 
@@ -79,12 +79,10 @@ fun NumFactsScreen(
                 ) {
                     GetNumFactSection(
                         numTypeValue = state.numTypeValue,
-                        onChangeNumTypeValue = viewModel::changeNumTypeValue,
                         numberValue = state.numberValue,
                         onChangeNumberValue = viewModel::tryChangeNumberValue,
                         onGetNumFact = viewModel::fetchNumFact,
                         randomNumTypeValue = state.randomNumTypeValue,
-                        onChangeRandomNumTypeValue = viewModel::changeRandomNumTypeValue,
                         onGetRandomNumFact = viewModel::fetchRandomNumFact,
                         modifier = Modifier
                             .fillMaxHeight()
@@ -94,7 +92,8 @@ fun NumFactsScreen(
                     NumFactsList(
                         isLoading = state.isListLoading,
                         numFacts = state.numFacts,
-                        onClick = onNavigateToNumFactDetail,
+                        onClickItem = onNavigateToNumFactDetail,
+                        onDeleteItem = onDeleteNumFact,
                         listState = listState,
                         modifier = Modifier
                             .fillMaxHeight()
@@ -111,22 +110,19 @@ fun NumFactsScreen(
                 ) {
                     GetNumFactSection(
                         numTypeValue = state.numTypeValue,
-                        onChangeNumTypeValue = viewModel::changeNumTypeValue,
                         numberValue = state.numberValue,
                         onChangeNumberValue = viewModel::tryChangeNumberValue,
                         onGetNumFact = viewModel::fetchNumFact,
                         randomNumTypeValue = state.randomNumTypeValue,
-                        onChangeRandomNumTypeValue = viewModel::changeRandomNumTypeValue,
                         onGetRandomNumFact = viewModel::fetchRandomNumFact,
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     NumFactsList(
                         isLoading = state.isListLoading,
                         numFacts = state.numFacts,
-                        onClick = onNavigateToNumFactDetail,
+                        onClickItem = onNavigateToNumFactDetail,
+                        onDeleteItem = onDeleteNumFact,
                         listState = listState,
                         modifier = Modifier.weight(1f)
                     )

@@ -46,20 +46,12 @@ class NumFactsViewModel @Inject constructor(
         fetchNumFacts()
     }
 
-    fun changeNumTypeValue(numType: NumType) {
-        _uiState.update { it.copy(numTypeValue = numType) }
-    }
-
     fun tryChangeNumberValue(number: String) =
         if (number.length <= 50) {
             _uiState.update { it.copy(numberValue = number) }
 
             true
         } else false
-
-    fun changeRandomNumTypeValue(numType: NumType) {
-        _uiState.update { it.copy(randomNumTypeValue = numType) }
-    }
 
     fun fetchNumFact(number: String, type: NumType) {
         fetchNumFactByTypeAndNumber(type, number)

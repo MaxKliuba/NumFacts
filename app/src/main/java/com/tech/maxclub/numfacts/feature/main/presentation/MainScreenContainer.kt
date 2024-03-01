@@ -72,7 +72,8 @@ fun MainScreenContainer(viewModel: MainViewModel = hiltViewModel()) {
                 NumFactsScreen(
                     onNavigateToNumFactDetail = { numFactId ->
                         navController.navigate("${Screen.NumFactDetail.route}/$numFactId")
-                    }
+                    },
+                    onDeleteNumFact = viewModel::deleteNumFact
                 )
             }
 

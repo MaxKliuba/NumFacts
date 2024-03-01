@@ -1,5 +1,6 @@
 package com.tech.maxclub.numfacts.feature.numfacts.presentation.numfactslist.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,11 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.tech.maxclub.numfacts.R
 import com.tech.maxclub.numfacts.feature.numfacts.domain.models.NumFact
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NumFactsList(
     isLoading: Boolean,
     numFacts: List<NumFact>,
-    onClick: (Int) -> Unit,
+    onClickItem: (Int) -> Unit,
+    onDeleteItem: (Int) -> Unit,
     listState: LazyListState,
     modifier: Modifier = Modifier
 ) {
@@ -57,10 +60,16 @@ fun NumFactsList(
                         items = numFacts,
                         key = { it.id }
                     ) { numFact ->
-                        NumFactItem(
-                            numFact = numFact,
-                            onClick = onClick,
-                        )
+                        SwipeToDeleteContainer(
+                            item = numFact,
+                            onDelete = { onDeleteItem(numFact.id) },
+                            modifier = Modifier.animateItemPlacement()
+                        ) {
+                            NumFactItem(
+                                numFact = numFact,
+                                onClick = onClickItem,
+                            )
+                        }
                     }
                 }
             }

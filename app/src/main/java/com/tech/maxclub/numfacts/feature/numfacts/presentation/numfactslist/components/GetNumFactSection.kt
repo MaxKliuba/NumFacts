@@ -16,7 +16,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,18 +26,19 @@ import androidx.compose.ui.unit.dp
 import com.tech.maxclub.numfacts.R
 import com.tech.maxclub.numfacts.feature.numfacts.domain.models.NumType
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GetNumFactSection(
     numTypeValue: NumType,
-    onChangeNumTypeValue: (NumType) -> Unit,
     numberValue: String,
     onChangeNumberValue: (String) -> Unit,
     onGetNumFact: (String, NumType) -> Unit,
     randomNumTypeValue: NumType,
-    onChangeRandomNumTypeValue: (NumType) -> Unit,
     onGetRandomNumFact: (NumType) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.get_fact_title),
@@ -48,14 +51,6 @@ fun GetNumFactSection(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            NumTypeDropdownMenu(
-                value = numTypeValue,
-                values = NumType.entries.toList(),
-                onChangeValue = onChangeNumTypeValue,
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
             TextField(
                 value = numberValue,
                 onValueChange = onChangeNumberValue,
@@ -64,20 +59,26 @@ fun GetNumFactSection(
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Send,
+                    imeAction = ImeAction.Done,
                 ),
                 keyboardActions = KeyboardActions(
-                    onSend = { onGetNumFact(numberValue, numTypeValue) }
+                    onDone = {
+                        onGetNumFact(numberValue, numTypeValue)
+                        keyboardController?.hide()
+                    }
                 ),
                 singleLine = true,
                 maxLines = 1,
                 modifier = Modifier.weight(1f)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
             Button(
-                onClick = { onGetNumFact(numberValue, numTypeValue) },
+                onClick = {
+                    onGetNumFact(numberValue, numTypeValue)
+                    keyboardController?.hide()
+                },
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.height(56.dp)
             ) {
@@ -90,28 +91,18 @@ fun GetNumFactSection(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
-        Row(
+        Button(
+            onClick = {
+                onGetRandomNumFact(randomNumTypeValue)
+                keyboardController?.hide()
+            },
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
+                .height(56.dp)
         ) {
-            NumTypeDropdownMenu(
-                value = randomNumTypeValue,
-                values = NumType.entries.toList(),
-                onChangeValue = onChangeRandomNumTypeValue,
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = { onGetRandomNumFact(randomNumTypeValue) },
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .height(56.dp)
-                    .weight(1f)
-            ) {
-                Text(text = stringResource(R.string.get_random_fact_button))
-            }
+            Text(text = stringResource(R.string.get_random_fact_button))
         }
     }
 }
